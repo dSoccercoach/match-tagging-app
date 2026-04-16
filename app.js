@@ -33,8 +33,6 @@ const positions = [
 
 function init() {
 
-askOpponent();
-
 loadData();
 
 registerServiceWorker();
@@ -52,7 +50,9 @@ createTagPlayers();
 
 }
 
-function askOpponent() {
+
+
+function setOpponent() {
 
 let opponent = prompt("Opponent name:");
 
@@ -64,7 +64,7 @@ matchName = date + " vs " + opponent;
 
 document.getElementById("matchName")
 .innerText = matchName;
-
+saveData();
 }
 
 function createPlayers() {
@@ -671,6 +671,10 @@ localStorage.setItem(
 "positions",
 JSON.stringify(playerPositions)
 );
+localStorage.setItem(
+    "matchName",
+    matchName
+);
 
 }
 
@@ -693,6 +697,22 @@ localStorage.getItem("positions");
 
 if (p)
 playerPositions = JSON.parse(p);
+
+let m =
+    localStorage.getItem(
+        "matchName"
+    );
+
+if (m) {
+
+    matchName = m;
+
+    document.getElementById(
+        "matchName"
+    ).innerText =
+        matchName;
+
+}
 
 }
 
