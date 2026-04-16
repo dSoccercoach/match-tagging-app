@@ -165,96 +165,169 @@ bench.style.visibility = "visible";
 
 function makeDraggable(player) {
 
-let offsetX = 0;
-let offsetY = 0;
-let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
 
-player.addEventListener("mousedown", startDrag);
-player.addEventListener("touchstart", startDrag);
+    let startX = 0;
+    let startY = 0;
 
-function startDrag(e) {
+    let isDragging = false;
 
-    isDragging = true;
+    const TAP_THRESHOLD = 8; // pixels
 
-    // STOP SCROLLING
-    e.preventDefault();
+    player.addEventListener("mousedown", startDrag);
+    player.addEventListener("touchstart", startDrag);
 
-    let rect = player.getBoundingClientRect();
+    function startDrag(e) {
 
-    let event = e.touches ? e.touches[0] : e;
+        e.preventDefault();
 
-    offsetX = event.clientX - rect.left;
-    offsetY = event.clientY - rect.top;
+        let event =
+            e.touches ? e.touches[0] : e;
 
-    document.addEventListener("mousemove", drag);
-    document.addEventListener("touchmove", drag, { passive: false });
+        let rect =
+            player.getBoundingClientRect();
 
-    document.addEventListener("mouseup", stopDrag);
-    document.addEventListener("touchend", stopDrag);
+        offsetX =
+            event.clientX - rect.left;
 
-}
+        offsetY =
+            event.clientY - rect.top;
 
-function drag(e) {
+        startX = event.clientX;
+        startY = event.clientY;
 
-    if (!isDragging) return;
+        isDragging = false;
 
-    // STOP PAGE SCROLL
-    e.preventDefault();
-
-    let container =
-        document.getElementById(
-            "popupLineupContainer"
+        document.addEventListener(
+            "mousemove",
+            drag
         );
 
-    let rect = container.getBoundingClientRect();
+        document.addEventListener(
+            "touchmove",
+            drag,
+            { passive: false }
+        );
 
-    let event =
-        e.touches ? e.touches[0] : e;
+        document.addEventListener(
+            "mouseup",
+            stopDrag
+        );
 
-    let x =
-        event.clientX -
-        rect.left -
-        offsetX;
+        document.addEventListener(
+            "touchend",
+            stopDrag
+        );
 
-    let y =
-        event.clientY -
-        rect.top -
-        offsetY;
+    }
 
-    player.style.left = x + "px";
-    player.style.top = y + "px";
+    function drag(e) {
 
-}
+        let event =
+            e.touches ? e.touches[0] : e;
 
-function stopDrag() {
+        let dx =
+            Math.abs(
+                event.clientX - startX
+            );
 
-if (!isDragging) return;
+        let dy =
+            Math.abs(
+                event.clientY - startY
+            );
 
-isDragging = false;
+        if (
+            dx > TAP_THRESHOLD ||
+            dy > TAP_THRESHOLD
+        ) {
 
-savePlayerPositions();
+            isDragging = true;
 
-document.removeEventListener(
-"mousemove",
-drag
-);
+        }
 
-document.removeEventListener(
-"touchmove",
-drag
-);
+        if (!isDragging) return;
 
-document.removeEventListener(
-"mouseup",
-stopDrag
-);
+        e.preventDefault();
 
-document.removeEventListener(
-"touchend",
-stopDrag
-);
+        let container =
+            document.getElementById(
+                "popupLineupContainer"
+            );
 
-}
+        let rect =
+            container.getBoundingClientRect();
+
+        let x =
+            event.clientX -
+            rect.left -
+            offsetX;
+
+        let y =
+            event.clientY -
+            rect.top -
+            offsetY;
+
+        player.style.left =
+            x + "px";
+
+        player.style.top =
+            y + "px";
+
+    }
+
+    function stopDrag(e) {
+
+        document.removeEventListener(
+            "mousemove",
+            drag
+        );
+
+        document.removeEventListener(
+            "touchmove",
+            drag
+        );
+
+        document.removeEventListener(
+            "mouseup",
+            stopDrag
+        );
+
+        document.removeEventListener(
+            "touchend",
+            stopDrag
+        );
+
+        if (!isDragging) {
+
+            let id =
+                player.dataset.player;
+
+            if (subMode) {
+
+                handleSubstitution(
+                    parseInt(id)
+                );
+
+            }
+
+            else {
+
+                selectPlayer(
+                    parseInt(id)
+                );
+
+            }
+
+        }
+
+        else {
+
+            savePlayerPositions();
+
+        }
+
+    }
 
 }
 
