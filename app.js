@@ -522,17 +522,13 @@ outY: outY
 
 players.forEach(p => {
 
-    if (
-        p.dataset.player == subOut
-    ) {
+    if (p.dataset.player == subOut) {
 
-        p.classList.remove(
-            "sub-out"
-        );
+        p.classList.remove("sub-out");
 
-        p.style.position =
-            "relative";
+        /* MOVE TO BENCH */
 
+        p.style.position = "static";
         p.style.left = "";
         p.style.top = "";
 
@@ -540,12 +536,11 @@ players.forEach(p => {
 
     }
 
-    if (
-        p.dataset.player == subIn
-    ) {
+    if (p.dataset.player == subIn) {
 
-        p.style.position =
-            "absolute";
+        /* MOVE TO FIELD */
+
+        p.style.position = "absolute";
 
         p.style.left = outX;
         p.style.top = outY;
@@ -664,7 +659,16 @@ function createTagPlayers() {
             "tagPlayerPanel"
         );
 
-    if (!panel) return;
+    if (!panel) {
+
+        console.log(
+            "tagPlayerPanel not found"
+        );
+
+        return;
+
+    }
+
 
     panel.innerHTML = "";
 
@@ -1018,7 +1022,7 @@ function loadPlayerPositions() {
         ) {
 
             p.style.position =
-                "relative";
+                "static";
 
             bench.appendChild(p);
 
