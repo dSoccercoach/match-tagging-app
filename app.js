@@ -33,20 +33,17 @@ const positions = [
 
 function init() {
 
-loadData();
+    loadData();
 
-registerServiceWorker();
+    registerServiceWorker();
 
+    window.requestAnimationFrame(() => {
 
-/* wait until DOM is fully ready */
-window.requestAnimationFrame(() => {
+        createPlayers();
+        createTagPlayers();
+        loadPlayerPositions();
 
-createPlayers();
-createTagPlayers();
-loadPlayerPositions();
-createTagPlayers();
-
-});
+    });
 
 }
 
@@ -492,7 +489,13 @@ return;
 /* SECOND CLICK */
 
 let subIn = player;
+if (subIn == subOut) {
 
+    alert("Select a different player");
+
+    return;
+
+}
 /* FIND OUT PLAYER POSITION */
 
 let outX = null;
@@ -580,22 +583,23 @@ period: period
 subMode = false;
 
 subOut = null;
+
 /* REMOVE ALL BLUE HIGHLIGHTS */
 
-let players =
-document.querySelectorAll(".player");
-
-players.forEach(p => {
+document.querySelectorAll(".player")
+.forEach(p => {
 
     p.classList.remove("sub-out");
 
 });
+
 document.getElementById(
-"subStatus"
+    "subStatus"
 ).innerText =
-"SUB MODE: OFF";
+    "SUB MODE: OFF";
 
 savePlayerPositions();
+
 saveData();
 
 }
@@ -641,47 +645,55 @@ bench.appendChild(p);
 /* remove last sub from history */
 substitutions.pop();
 
-/* reset memory */
 lastSub = null;
+
+savePlayerPositions();
 
 saveData();
 
-document.getElementById("subStatus").innerText =
-"SUB UNDONE";
+document.getElementById(
+    "subStatus"
+).innerText =
+    "SUB UNDONE";
 
 }
 function createTagPlayers() {
 
-let panel = document.getElementById("playerPanel");
+    let panel =
+        document.getElementById(
+            "tagPlayerPanel"
+        );
 
-if (!panel) return;
+    if (!panel) return;
 
-panel.innerHTML = "";
+    panel.innerHTML = "";
 
-for (let i = 1; i <= 18; i++) {
+    for (let i = 1; i <= 18; i++) {
 
-let btn = document.createElement("div");
+        let player =
+            document.createElement("div");
 
-btn.className = "player-btn";
+        player.className =
+            "player";
 
-btn.innerText = "Player " + i;
+        player.innerText = i;
 
-btn.onclick = () => {
+        player.dataset.player = i;
 
-selectedPlayer = i;
+        player.style.position =
+            "static";
 
-/* highlight */
-document.querySelectorAll(".player-btn").forEach(b => {
-b.classList.remove("active");
-});
+        player.onclick = () => {
 
-btn.classList.add("active");
+            selectedPlayer = i;
 
-};
+            highlightTagPlayer(i);
 
-panel.appendChild(btn);
+        };
 
-}
+        panel.appendChild(player);
+
+    }
 
 }
 
@@ -1193,17 +1205,14 @@ loadPlayerPositions();
 }
 
 function closeLineup() {
-document.body.style.overflow = "auto";
-document.getElementById(
-"lineupModal"
-).style.display = "none";
+
+    document.body.style.overflow =
+        "auto";
+
+    savePlayerPositions();
+
+    document.getElementById(
+        "lineupModal"
+    ).style.display = "none";
 
 }
-
-window.onload = function() {
-
-init();
-
-loadPlayerPositions();
-
-};
