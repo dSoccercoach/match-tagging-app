@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Soccer Match Tracker</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="manifest" href="manifest.json">
+
+</head>
+
+<body>
+
+<h2>
+Match:
+<span id="matchName"></span>
+</h2>
+
+<!-- TIMER -->
+
+<div id="timer">
+00:00
+</div>
+
+
+<!-- CONTROLS -->
+
+<div class="controls">
+
+    <button onclick="openLineup()">
+OPEN LINE-UP
+</button>
+
+
+
+<button onclick="startMatch()">
+START
+</button>
+
+<button onclick="stopMatch()">
+STOP
+</button>
+
+<button onclick="nextHalf()">
+NEXT HALF
+</button>
+
+
+    <button onclick="clearLastEvents()">
+LAST EVENTS
+</button>
+
+    <button onclick="clearEvents()">
+CLEAR MATCH DATA
+</button>
+<button onclick="exportCSV()">
+EXPORT
+</button>
+
+</div>
+
+<hr>
+
+
+<!-- EVENTS -->
+
+<h3>
+Events
+</h3>
+
+<div class="events">
+
+<button class="event-btn"
+        onclick="selectEvent('SHOT')">
+SHOT
+</button>
+
+<button class="event-btn"
+        onclick="selectEvent('BALL LOSS')">
+BALL LOSS
+</button>
+
+<button class="event-btn"
+        onclick="selectEvent('BALL WIN')">
+BALL WIN
+</button>
+
+</div>
+
+<hr>
+<h3>Line-up & Match Tagging</h3>
+
+<div id="taggingLayout">
+
+  <!-- LEFT: PLAYER LIST -->
+  <div id="tagPlayerPanel"></div>
+
+  <!-- RIGHT: FIELD -->
+  <div id="fieldPanel">
+    <img src="field_vertical_area.png" id="taggingField" onclick="recordZone(event)">
+  </div>
+
+</div>
+
+<!-- LINE-UP POPUP -->
+
+<div id="lineupModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close"
+      onclick="closeLineup()">
+&times;
+</span>
+
+<h3>Line-up & Bench</h3>
+<div id="subPanel">
+
+<button onclick="startSubstitution()">
+START SUBSTITUTION
+</button>
+    <button onclick="undoSubstitution()">
+UNDO SUB
+</button>
+
+<div id="subStatus">
+
+SUB MODE: OFF
+
+</div>
+
+</div>
+<div id="popupLineupContainer">
+
+<img
+src="field_vertical.png"
+id="popupLineupField"
+width="100%"
+>
+
+<div id="popupLineupLayer"></div>
+
+</div>
+
+<h4>Bench</h4>
+
+<div id="bench"></div>
+
+</div>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+
+</html>

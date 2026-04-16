@@ -1,0 +1,627 @@
+body {
+
+font-family: Arial;
+
+text-align: center;
+
+background: #f5f5f5;
+
+}
+
+/* BUTTONS */
+
+button {
+
+padding: 12px;
+
+margin: 6px;
+
+font-size: 16px;
+
+cursor: pointer;
+
+}
+
+/* CONTROL PANEL */
+
+.controls {
+
+position: relative;
+
+z-index: 10;
+
+}
+
+/* PLAYERS GRID */
+
+#players {
+
+display: grid;
+
+grid-template-columns: repeat(6, 1fr);
+
+gap: 6px;
+
+margin-bottom: 10px;
+
+}
+
+/* EVENTS */
+
+.events {
+
+margin-bottom: 10px;
+
+}
+
+/* TIMER */
+
+#timer {
+
+font-size: 28px;
+
+font-weight: bold;
+
+letter-spacing: 1px;
+
+}
+
+/* FIELD CONTAINER */
+
+#fieldContainer {
+
+position: relative;
+
+width: 100%;
+
+max-width: 900px;
+
+margin: auto;
+
+}
+
+/* FIELD IMAGE */
+
+#field {
+
+width: 100%;
+
+max-width: 900px;
+
+border: 2px solid black;
+
+display: block;
+
+}
+
+/*Event Button*/
+.event-btn {
+
+background: lightgray;
+
+}
+
+.event-btn.active {
+
+background: orange;
+
+color: white;
+
+font-weight: bold;
+
+transform: scale(1.05);
+
+}
+/* PLAYER LAYER */
+
+#playerLayer {
+
+position: absolute;
+
+top: 0;
+
+left: 0;
+
+width: 100%;
+
+height: 100%;
+
+/* allow clicks to pass through */
+
+pointer-events: none;
+
+}
+
+/* PLAYER ICONS */
+
+.player {
+
+position: absolute;
+
+width: 40px;
+
+height: 40px;
+
+border-radius: 50%;
+
+background: red;
+
+color: white;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+font-weight: bold;
+
+cursor: move;
+
+/* allow dragging */
+
+pointer-events: auto;
+
+}
+
+/* STATUS PANEL */
+
+#status {
+
+margin-top: 10px;
+
+}
+
+#modeDisplay {
+
+font-size: 18px;
+
+font-weight: bold;
+
+margin: 6px;
+
+color: blue;
+
+}
+
+/* TWO FIELDS LAYOUT */
+
+#fieldsWrapper {
+
+display: flex;
+
+gap: 10px;
+
+justify-content: center;
+
+align-items: flex-start;
+
+flex-wrap: wrap;
+
+}
+
+.fieldBox {
+
+flex: 1;
+
+min-width: 320px;
+
+max-width: 600px;
+
+}
+
+/* FIELD CONTAINERS */
+
+
+#lineupContainer {
+
+position: relative;
+
+width: 100%;
+
+max-width: 600px;
+
+}
+
+#taggingContainer {
+
+position: relative;
+
+width: 100%;
+
+}
+
+/* FIELD IMAGES */
+
+#lineupField,
+#taggingField {
+
+width: 100%;
+
+border: 2px solid black;
+
+display: block;
+
+}
+
+/* PLAYER LAYER (LEFT FIELD) */
+
+#lineupLayer {
+
+position: absolute;
+
+top: 0;
+left: 0;
+
+width: 100%;
+height: 100%;
+
+pointer-events: none;
+
+}
+
+/* PLAYER ICONS */
+
+.player {
+
+position: absolute;
+
+width: 40px;
+height: 40px;
+
+border-radius: 50%;
+
+background: red;
+color: white;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+font-weight: bold;
+
+cursor: move;
+
+pointer-events: auto;
+
+}
+
+#mainLayout {
+  display: flex;
+  gap: 10px;
+}
+
+#lineupFrame {
+  display: none;
+  flex: 1;
+  border: 2px solid #ccc;
+  padding: 10px;
+  background: #fafafa;
+}
+
+#taggingFrame {
+  flex: 1;
+  border: 2px solid #ccc;
+  padding: 10px;
+}
+
+/* Bench area */
+#bench {
+
+display: flex;
+
+flex-wrap: wrap;
+
+gap: 8px;
+
+min-height: 90px;
+
+border: 2px dashed gray;
+
+padding: 8px;
+
+margin-top: 10px;
+
+width: 100%;
+
+background: #ffffff;
+
+box-sizing: border-box;
+
+}
+
+/* Field container */
+#lineupContainer {
+
+position: relative;
+
+width: 100%;
+
+max-width: 600px;
+
+}
+
+#lineupLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Player */
+.player {
+
+width: 36px;
+height: 36px;
+
+border-radius: 50%;
+
+background: red;
+
+color: white;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+font-weight: bold;
+
+font-size: 14px;
+
+user-select: none;
+
+}
+
+/* POPUP BACKGROUND */
+
+.modal {
+
+display: none;
+
+position: fixed;
+
+z-index: 9999;
+
+left: 0;
+top: 0;
+
+width: 100%;
+height: 100%;
+
+background-color: rgba(0,0,0,0.6);
+
+}
+
+.modal-content {
+
+background: white;
+
+margin: 5% auto;
+
+padding: 15px;
+
+width: 90%;
+
+max-width: 600px;
+
+border-radius: 10px;
+
+position: relative;
+
+display: block;
+
+
+overflow-y: auto;
+
+max-height: 90vh;
+
+}
+
+/* POPUP WINDOW */
+
+.modal-content {
+
+
+flex-direction: column;
+
+align-items: center;
+
+max-width: 520px;
+
+margin: auto;
+
+}
+
+/* CLOSE BUTTON */
+
+.close {
+
+position: absolute;
+
+top: 10px;
+right: 15px;
+
+font-size: 28px;
+
+cursor: pointer;
+
+}
+
+/* FIELD */
+
+#lineupContainer {
+
+position: relative;
+
+}
+
+#lineupLayer {
+
+position: absolute;
+
+top: 0;
+left: 0;
+
+width: 100%;
+height: 100%;
+
+}
+
+#popupLineupContainer {
+
+position: relative;
+
+width: 100%;
+
+}
+
+#popupLineupLayer {
+
+position: absolute;
+
+top: 0;
+left: 0;
+
+width: 100%;
+height: 100%;
+
+pointer-events: none;
+
+}
+
+/* PLAYER */
+
+.player {
+
+width: 40px;
+height: 40px;
+
+border-radius: 50%;
+
+background: red;
+color: white;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+font-weight: bold;
+
+cursor: move;
+
+z-index: 10;
+
+}
+
+#subPanel {
+
+margin-bottom: 10px;
+
+padding: 8px;
+
+background: #f0f0f0;
+
+border-radius: 6px;
+
+}
+
+#subStatus {
+
+margin-top: 5px;
+
+font-weight: bold;
+
+}
+
+.sub-out {
+
+background: blue !important;
+
+transform: scale(1.2);
+
+}
+
+#taggingLayout {
+
+display: flex;
+
+gap: 12px;
+
+align-items: flex-start;
+
+}
+
+#tagPlayerPanel {
+
+width: 70px;
+
+display: flex;
+
+flex-direction: column;
+
+gap: 8px;
+
+padding: 6px;
+
+border: 1px solid #ccc;
+
+background: white;
+
+max-height: 520px;
+
+overflow-y: auto;
+
+}
+
+#playerPanel {
+
+width: 120px;
+
+max-height: 500px;
+
+overflow-y: auto;
+
+display: flex;
+
+flex-direction: column;
+
+gap: 6px;
+
+padding: 8px;
+
+border: 1px solid #ccc;
+
+background: #fff;
+
+}
+
+.player-btn {
+
+padding: 6px;
+
+border: 1px solid #aaa;
+
+background: #f2f2f2;
+
+cursor: pointer;
+
+font-weight: bold;
+
+}
+
+.player-btn.active {
+
+background: blue;
+
+color: white;
+
+}
+
+#fieldPanel {
+
+flex: 1;
+
+position: relative;
+
+}
