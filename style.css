@@ -629,3 +629,9 @@ flex: 1;
 position: relative;
 
 }
+
+#tagPlayerPanel .player {
+    position: static;
+    cursor: pointer;
+
+}
