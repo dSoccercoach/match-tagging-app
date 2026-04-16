@@ -37,16 +37,12 @@ function init() {
 
     registerServiceWorker();
 
-    window.requestAnimationFrame(() => {
-
-        createPlayers();
-        createTagPlayers();
-        loadPlayerPositions();
-
-    });
+    createPlayers();
+    createTagPlayers();
+    loadPlayerPositions();
 
 }
-
+document.addEventListener("DOMContentLoaded", init);
 
 
 function setOpponent() {
@@ -827,8 +823,10 @@ navigator.serviceWorker
 
 function savePlayerPositions() {
 
-    let players =
-        document.querySelectorAll(".player");
+   let players =
+document.querySelectorAll(
+    "#popupLineupLayer .player, #bench .player"
+);
 
     let positions = {};
 
@@ -951,10 +949,10 @@ function loadPlayerPositions() {
             "bench"
         );
 
-    let players =
-        document.querySelectorAll(
-            ".player"
-        );
+   let players =
+document.querySelectorAll(
+    "#popupLineupLayer .player, #bench .player"
+);
 
     players.forEach(p => {
 
