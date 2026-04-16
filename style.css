@@ -158,6 +158,8 @@ font-weight: bold;
 
 cursor: move;
 
+touch-action:none;
+
 /* allow dragging */
 
 pointer-events: auto;
@@ -473,6 +475,8 @@ height: 100%;
 position: relative;
 
 width: 100%;
+
+touch-action:none;
 
 }
 

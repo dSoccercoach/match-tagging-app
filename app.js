@@ -174,73 +174,55 @@ player.addEventListener("touchstart", startDrag);
 
 function startDrag(e) {
 
+    isDragging = true;
 
-isDragging = true;
+    // STOP SCROLLING
+    e.preventDefault();
 
-let rect =
-player.getBoundingClientRect();
+    let rect = player.getBoundingClientRect();
 
-let event =
-e.touches ? e.touches[0] : e;
+    let event = e.touches ? e.touches[0] : e;
 
-offsetX =
-event.clientX - rect.left;
+    offsetX = event.clientX - rect.left;
+    offsetY = event.clientY - rect.top;
 
-offsetY =
-event.clientY - rect.top;
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("touchmove", drag, { passive: false });
 
-document.addEventListener(
-"mousemove",
-drag
-);
-
-document.addEventListener(
-"touchmove",
-drag
-);
-
-document.addEventListener(
-"mouseup",
-stopDrag
-);
-
-document.addEventListener(
-"touchend",
-stopDrag
-);
+    document.addEventListener("mouseup", stopDrag);
+    document.addEventListener("touchend", stopDrag);
 
 }
 
 function drag(e) {
 
-if (!isDragging) return;
+    if (!isDragging) return;
 
-let container =
-document.getElementById(
-"popupLineupContainer"
-);
+    // STOP PAGE SCROLL
+    e.preventDefault();
 
-let rect =
-container.getBoundingClientRect();
+    let container =
+        document.getElementById(
+            "popupLineupContainer"
+        );
 
-let event =
-e.touches ? e.touches[0] : e;
+    let rect = container.getBoundingClientRect();
 
-let x =
-event.clientX -
-rect.left -
-offsetX;
+    let event =
+        e.touches ? e.touches[0] : e;
 
-let y =
-event.clientY -
-rect.top -
-offsetY;
+    let x =
+        event.clientX -
+        rect.left -
+        offsetX;
 
-player.style.left =
-x + "px";
+    let y =
+        event.clientY -
+        rect.top -
+        offsetY;
 
-player.style.top =
-y + "px";
+    player.style.left = x + "px";
+    player.style.top = y + "px";
 
 }
 
@@ -1057,7 +1039,7 @@ document.getElementById(
 ).style.display = "block";
 
 /* ALWAYS rebuild players */
-
+document.body.style.overflow = "hidden";
 createPlayers();
 
 /* THEN load saved positions */
@@ -1067,7 +1049,7 @@ loadPlayerPositions();
 }
 
 function closeLineup() {
-
+document.body.style.overflow = "auto";
 document.getElementById(
 "lineupModal"
 ).style.display = "none";
