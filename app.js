@@ -652,54 +652,6 @@ document.getElementById(
     "SUB UNDONE";
 
 }
-function createTagPlayers() {
-
-    let panel =
-        document.getElementById(
-            "tagPlayerPanel"
-        );
-
-    if (!panel) {
-
-        console.log(
-            "tagPlayerPanel not found"
-        );
-
-        return;
-
-    }
-
-
-    panel.innerHTML = "";
-
-    for (let i = 1; i <= 18; i++) {
-
-        let player =
-            document.createElement("div");
-
-        player.className =
-            "player";
-
-        player.innerText = i;
-
-        player.dataset.player = i;
-
-        player.style.position =
-            "static";
-
-        player.onclick = () => {
-
-            selectedPlayer = i;
-
-            highlightTagPlayer(i);
-
-        };
-
-        panel.appendChild(player);
-
-    }
-
-}
 
 function getZone(x, y, width, height) {
 
