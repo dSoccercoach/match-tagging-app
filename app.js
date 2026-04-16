@@ -519,35 +519,39 @@ outY: outY
 
 players.forEach(p => {
 
-/* OUT → BENCH */
+    if (
+        p.dataset.player == subOut
+    ) {
 
-if (p.dataset.player == subOut) {
+        p.classList.remove(
+            "sub-out"
+        );
 
-p.style.position = "static";
-p.style.left = "";
-p.style.top = "";
+        p.style.position =
+            "relative";
 
-bench.appendChild(p);
+        p.style.left = "";
+        p.style.top = "";
 
-}
+        bench.appendChild(p);
 
-/* IN → FIELD SAME POSITION */
+    }
 
-if (p.dataset.player == subIn) {
+    if (
+        p.dataset.player == subIn
+    ) {
 
-p.style.position =
-"absolute";
+        p.style.position =
+            "absolute";
 
-p.style.left = outX;
+        p.style.left = outX;
+        p.style.top = outY;
 
-p.style.top = outY;
+        fieldLayer.appendChild(p);
 
-fieldLayer.appendChild(p);
-
-}
+    }
 
 });
-
 /* LOG SUB */
 
 playerStatus[subOut] = "OFF";
@@ -576,7 +580,16 @@ period: period
 subMode = false;
 
 subOut = null;
+/* REMOVE ALL BLUE HIGHLIGHTS */
 
+let players =
+document.querySelectorAll(".player");
+
+players.forEach(p => {
+
+    p.classList.remove("sub-out");
+
+});
 document.getElementById(
 "subStatus"
 ).innerText =
@@ -846,31 +859,34 @@ navigator.serviceWorker
 
 function savePlayerPositions() {
 
-let players =
-document.querySelectorAll(
-".player"
-);
+    let players =
+        document.querySelectorAll(".player");
 
-let positions = {};
+    let positions = {};
 
-players.forEach(p => {
+    players.forEach(p => {
 
-positions[
-p.dataset.player
-] = {
+        let parent =
+            p.parentElement.id;
 
-x: p.style.left,
+        positions[
+            p.dataset.player
+        ] = {
 
-y: p.style.top
+            x: p.style.left,
+            y: p.style.top,
 
-};
+            location: parent
+            // popupLineupLayer OR bench
 
-});
+        };
 
-localStorage.setItem(
-"fieldPositions",
-JSON.stringify(positions)
-);
+    });
+
+    localStorage.setItem(
+        "fieldPositions",
+        JSON.stringify(positions)
+    );
 
 }
 function createTagPlayers() {
@@ -947,40 +963,75 @@ p.style.transform = "scale(1)";
 
 function loadPlayerPositions() {
 
-let saved =
-localStorage.getItem(
-"fieldPositions"
-);
+    let saved =
+        localStorage.getItem(
+            "fieldPositions"
+        );
 
-if (!saved) return;
+    if (!saved) return;
 
-let positions =
-JSON.parse(saved);
+    let positions =
+        JSON.parse(saved);
 
-let players =
-document.querySelectorAll(
-".player"
-);
+    let fieldLayer =
+        document.getElementById(
+            "popupLineupLayer"
+        );
 
-players.forEach(p => {
+    let bench =
+        document.getElementById(
+            "bench"
+        );
 
-let id =
-p.dataset.player;
+    let players =
+        document.querySelectorAll(
+            ".player"
+        );
 
-if (positions[id]) {
+    players.forEach(p => {
 
-p.style.left =
-positions[id].x;
+        let id =
+            p.dataset.player;
 
-p.style.top =
-positions[id].y;
+        if (!positions[id])
+            return;
+
+        let pos =
+            positions[id];
+
+        /* MOVE PLAYER TO SAVED LOCATION */
+
+        if (
+            pos.location === "bench"
+        ) {
+
+            p.style.position =
+                "relative";
+
+            bench.appendChild(p);
+
+        }
+
+        else {
+
+            p.style.position =
+                "absolute";
+
+            fieldLayer.appendChild(p);
+
+        }
+
+        /* RESTORE POSITION */
+
+        if (pos.x)
+            p.style.left = pos.x;
+
+        if (pos.y)
+            p.style.top = pos.y;
+
+    });
 
 }
-
-});
-
-}
-
 
 function selectPlayer(number) {
 
