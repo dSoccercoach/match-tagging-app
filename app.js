@@ -123,17 +123,8 @@ player.dataset.player = jersey[i];
 
 /* CLICK */
 
-player.onclick = () => {
+player.onclick = null;
 
-if (subMode) {
-handleSubstitution(parseInt(player.dataset.player) );
-return;
-
-}
-
-selectPlayer(i);
-
-};
 
 /* STARTERS */
 
@@ -195,7 +186,7 @@ function makeDraggable(player) {
 
     function startDrag(e) {
         if (subMode) return;
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
 
         let event =
             e.touches ? e.touches[0] : e;
@@ -313,26 +304,22 @@ function makeDraggable(player) {
             stopDrag
         );
 
-        if (!isDragging) {
+       if (!isDragging) {
 
-            let id =
-                player.dataset.player;
+              let id =
+                parseInt(player.dataset.player);
 
             if (subMode) {
 
-                handleSubstitution(
-                    parseInt(id)
-                );
+             handleSubstitution(id);
 
             }
 
-            else {
+                else {
 
-                selectPlayer(
-                    parseInt(id)
-                );
+            selectPlayer(id);
 
-            }
+         }
 
         }
 
