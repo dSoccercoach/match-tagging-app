@@ -1,18 +1,3 @@
-document.getElementById("debugBox").innerHTML +=
-"<br>APP JS LOADED";
-debug("APP JS LOADED");
-window.onerror = function(message, source, lineno, colno, error) {
-
-    let box = document.getElementById("debugBox");
-
-    if (box) {
-        box.innerHTML += "<br><b>ERROR:</b> " + message;
-        box.innerHTML += "<br>Line: " + lineno;
-    }
-
-    return false;
-
-};
 let selectedPlayer = null;
 let selectedEvent = null;
 
@@ -70,35 +55,35 @@ const jersey = [
 
 function init() {
 
-    debug("INIT START");
+    console.log("INIT START");
 
     try {
 
         loadData();
-        debug("loadData OK");
+        console.log("loadData OK");
 
         // TEMP — disable service worker
-        //registerServiceWorker();
-        debug("registerWK OK");
+        registerServiceWorker();
+        console.log("registerWK OK");
 
         createPlayers();
-        debug("createPlayers OK");
+        console.log("createPlayers OK");
 
         createTagPlayers();
-        debug("createTagPlayers OK");
+        console.log("createTagPlayers OK");
 
         loadPlayerPositions();
-        debug("loadPlayerPositions OK");
+        console.log("loadPlayerPositions OK");
 
     }
 
     catch (err) {
 
-        debug(
+        console.log(
             "INIT ERROR: " + err.message
         );
 
-        debug(err);
+        console.error(err);
 
     }
 
@@ -108,18 +93,6 @@ document.addEventListener(
     "DOMContentLoaded",
     init
 );
-
-function debug(msg) {
-
-let box = document.getElementById("debugBox");
-
-if (!box) return;
-
-box.innerHTML += "<br>" + msg;
-
-box.scrollTop = box.scrollHeight;
-
-}
 
 function setOpponent() {
 
