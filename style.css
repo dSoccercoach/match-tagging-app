@@ -159,8 +159,7 @@ font-weight: bold;
 cursor: move;
 
 touch-action:none;
-user-select: none;
--webkit-user-select: none;
+
 /* allow dragging */
 
 pointer-events: auto;
