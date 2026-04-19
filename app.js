@@ -1,3 +1,5 @@
+document.getElementById("debugBox").innerHTML +=
+"<br>APP JS LOADED";
 debug("APP JS LOADED");
 window.onerror = function(message, source, lineno, colno, error) {
 
