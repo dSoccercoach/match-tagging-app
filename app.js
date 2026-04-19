@@ -64,7 +64,7 @@ function init() {
         alert("loadData OK");
 
         // TEMP — disable service worker
-        // registerServiceWorker();
+        registerServiceWorker();
 
         createPlayers();
         alert("createPlayers OK");
@@ -918,9 +918,14 @@ function registerServiceWorker() {
 if ("serviceWorker" in navigator) {
 
 navigator.serviceWorker
-.register(
-"service-worker.js"
-);
+.register("service-worker.js")
+.then(reg => {
+
+console.log("SW registered");
+
+reg.update();
+
+});
 
 }
 
