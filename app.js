@@ -11,6 +11,7 @@ let events = [];
 let substitutions = [];
 
 let playerPositions = {};
+let tacticalPositions = {};
 let playerStatus = {};
 
 let subMode = false;
@@ -29,6 +30,27 @@ const positions = [
 "ST",
 "LW",
 "SUB"
+];
+
+const jersey = [
+6,
+5,
+8,
+4,
+1,
+11,
+12,
+2,
+10,
+14,
+19,
+9,
+78,
+17,
+16,
+7,
+13,
+18
 ];
 
 function init() {
@@ -87,24 +109,24 @@ bench.innerHTML = "";
 
 /* CREATE 18 PLAYERS */
 
-for (let i = 1; i <= 18; i++) {
+for (let i = 0; i < 18; i++) {
 
 let player =
 document.createElement("div");
 
 player.className = "player";
+console.log("Player created :", jersey[i] );
 
-player.innerText = i;
+player.innerText = jersey[i];
 
-player.dataset.player = i;
+player.dataset.player = jersey[i];
 
 /* CLICK */
 
 player.onclick = () => {
 
 if (subMode) {
-
-handleSubstitution(i);
+handleSubstitution(parseInt(player.dataset.player) );
 return;
 
 }
@@ -115,7 +137,7 @@ selectPlayer(i);
 
 /* STARTERS */
 
-if (i <= 11) {
+if (i < 11) {
 
 player.style.position =
 "absolute";
@@ -172,7 +194,7 @@ function makeDraggable(player) {
     player.addEventListener("touchstart", startDrag);
 
     function startDrag(e) {
-
+        if (subMode) return;
         e.preventDefault();
 
         let event =
@@ -334,7 +356,7 @@ positions.join(", ")
 
 if (!position) return;
 
-playerPositions[player] = position;
+tacticalPositions[player] = position;
 
 }
 
@@ -432,6 +454,8 @@ document.getElementById(
 }
 
 function handleSubstitution(player) {
+console.log("CLICK detected on player:", player);
+if (!subMode) return;
 
 let fieldLayer =
 document.getElementById(
@@ -443,32 +467,23 @@ document.getElementById(
 "bench"
 );
 
-let players =
-document.querySelectorAll(
-".player"
-);
-
 /* FIRST CLICK — SELECT OUT */
-if (!subOut) {
+
+if (subOut === null) {
+console.log("FIRST CLICK — OUT player selected:", player);
 
 subOut = player;
+document.querySelectorAll(".player")
+.forEach(p => {
+let id =
+parseInt(
+p.dataset.player
+);
 
-/* REMOVE OLD HIGHLIGHTS */
-
-players.forEach(p => {
-
-p.classList.remove("sub-out");
-
-});
-/* HIGHLIGHT OUT PLAYER */
-
-players.forEach(p => {
-
-if (p.dataset.player == subOut) {
-
-p.classList.add("sub-out");
-
-}
+p.classList.toggle(
+"sub-out",
+id === subOut
+);
 
 });
 
@@ -481,76 +496,126 @@ return;
 
 }
 
-
 /* SECOND CLICK */
 
 let subIn = player;
-if (subIn == subOut) {
+/* GET PLAYER ELEMENTS */
+console.log("FIRST CLICK — IN player selected:", player);
 
-    alert("Select a different player");
+/* GET PLAYERS — SAFE LOOKUP */
+
+let outPlayer = null;
+let inPlayer = null;
+
+document.querySelectorAll(".player").forEach(p => {
+
+    let id = parseInt(p.dataset.player);
+
+    if (id === subOut) outPlayer = p;
+
+    if (id === subIn) inPlayer = p;
+
+});
+
+/* SAFETY CHECK */
+
+if (!outPlayer || !inPlayer) {
+
+    console.log(
+        "Player lookup failed",
+        "outPlayer:",
+        outPlayer,
+        "inPlayer:",
+        inPlayer
+    );
 
     return;
 
 }
-/* FIND OUT PLAYER POSITION */
 
-let outX = null;
-let outY = null;
+/* DEBUG */
 
-players.forEach(p => {
+console.log(
+"OUT location:",
+outPlayer.parentElement?.id,
+"IN location:",
+inPlayer.parentElement?.id
+);
 
-if (p.dataset.player == subOut) {
+/* VALIDATE LOCATIONS */
 
-outX = p.style.left;
-outY = p.style.top;
+let outLocation =
+outPlayer.parentElement.id;
+
+let inLocation =
+inPlayer.parentElement.id;
+
+if (outLocation === inLocation) {
+
+    alert(
+        "Select a player from the other group"
+    );
+
+    return;
 
 }
 
-});
+/* SAVE POSITION */
+
+let outX =
+outPlayer.style.left || "20px";
+
+let outY =
+outPlayer.style.top || "20px";
+
 lastSub = {
+
 out: subOut,
 in: subIn,
 outX: outX,
 outY: outY
+
 };
 
-/* MOVE PLAYERS */
+/* MOVE OUT PLAYER TO BENCH */
 
-players.forEach(p => {
+outPlayer.classList.remove(
+"sub-out"
+);
 
-    if (p.dataset.player == subOut) {
+outPlayer.style.position =
+"static";
 
-        p.classList.remove("sub-out");
+outPlayer.style.left = "";
 
-        /* MOVE TO BENCH */
+outPlayer.style.top = "";
 
-        p.style.position = "static";
-        p.style.left = "";
-        p.style.top = "";
+bench.appendChild(
+outPlayer
+);
 
-        bench.appendChild(p);
+/* MOVE IN PLAYER TO FIELD */
 
-    }
+inPlayer.style.position =
+"absolute";
 
-    if (p.dataset.player == subIn) {
+inPlayer.style.left =
+outX;
 
-        /* MOVE TO FIELD */
+inPlayer.style.top =
+outY;
 
-        p.style.position = "absolute";
+fieldLayer.appendChild(
+inPlayer
+);
 
-        p.style.left = outX;
-        p.style.top = outY;
-
-        fieldLayer.appendChild(p);
-
-    }
-
-});
 /* LOG SUB */
 
-playerStatus[subOut] = "OFF";
+playerStatus[subOut] =
+"OFF";
 
-playerStatus[subIn] = "ON";
+playerStatus[subIn] =
+"ON";
 
 substitutions.push({
 
@@ -571,23 +636,26 @@ period: period
 
 /* RESET */
 
+document.querySelectorAll(
+".player"
+).forEach(p =>
+p.classList.remove(
+"sub-out"
+)
+);
+
+console.log(
+"Sub completed:",
+subOut,
+"->",
+subIn
+);
+
 subMode = false;
-
 subOut = null;
-
-/* REMOVE ALL BLUE HIGHLIGHTS */
-
-document.querySelectorAll(".player")
-.forEach(p => {
-
-    p.classList.remove("sub-out");
-
-});
-
 document.getElementById(
     "subStatus"
-).innerText =
-    "SUB MODE: OFF";
+).innerText = "";
 
 savePlayerPositions();
 
@@ -610,7 +678,7 @@ let players = document.querySelectorAll(".player");
 /* restore OUT player to field */
 players.forEach(p => {
 
-if (p.dataset.player == lastSub.out) {
+if (parseInt(p.dataset.player) === lastSub.out) {
 
 p.style.position = "absolute";
 p.style.left = lastSub.outX;
@@ -621,7 +689,7 @@ fieldLayer.appendChild(p);
 }
 
 /* restore IN player to bench */
-if (p.dataset.player == lastSub.in) {
+if (parseInt(p.dataset.player) === lastSub.in) {
 
 p.style.position = "static";
 p.style.left = "";
@@ -677,10 +745,19 @@ alert("Select player and event");
 return;
 }
 
-let rect = e.target.getBoundingClientRect();
+let rect =
+document.getElementById(
+"popupLineupContainer"
+).getBoundingClientRect();
 
-let x = e.clientX - rect.left;
-let y = e.clientY - rect.top;
+let event =
+    e.touches ? e.touches[0] : e;
+
+let x =
+    event.clientX - rect.left;
+
+let y =
+    event.clientY - rect.top;
 
 /* NEW: zone calculation */
 let zone = getZone(x, y, rect.width, rect.height);
@@ -719,7 +796,7 @@ JSON.stringify(substitutions)
 
 localStorage.setItem(
 "positions",
-JSON.stringify(playerPositions)
+JSON.stringify(tacticalPositions)
 );
 localStorage.setItem(
     "matchName",
@@ -746,7 +823,7 @@ let p =
 localStorage.getItem("positions");
 
 if (p)
-playerPositions = JSON.parse(p);
+tacticalPositions = JSON.parse(p);
 
 let m =
     localStorage.getItem(
@@ -848,10 +925,11 @@ document.querySelectorAll(
         };
 
     });
+    playerPositions = positions;
 
     localStorage.setItem(
-        "fieldPositions",
-        JSON.stringify(positions)
+    "fieldPositions",
+    JSON.stringify(positions)
     );
 
 }
@@ -868,16 +946,16 @@ panel.innerHTML = "";
 
 /* CREATE 18 PLAYERS */
 
-for (let i = 1; i <= 18; i++) {
+for (let i = 0; i < 18; i++) {
 
 let player =
 document.createElement("div");
 
 player.className = "player";
 
-player.innerText = i;
+player.innerText = jersey[i];
 
-player.dataset.player = i;
+player.dataset.player = jersey[i];
 
 /* IMPORTANT */
 player.style.position = "static";
@@ -886,9 +964,9 @@ player.style.position = "static";
 
 player.onclick = () => {
 
-selectedPlayer = i;
+selectedPlayer = jersey[i];
 
-highlightTagPlayer(i);
+highlightTagPlayer(jersey[i]);
 
 };
 
@@ -1008,11 +1086,11 @@ highlightSelectedPlayer(number);
 }
 function getPlayerPosition(player) {
 
-return playerPositions[player] || "";
+return tacticalPositions[player] || "";
 
 }
 
-function clearEvents() {
+function clearMatchData() {
 
 let confirmClear =
 confirm(
@@ -1079,7 +1157,9 @@ alert("Last event removed");
 function highlightSelectedPlayer(number) {
 
 let players =
-document.querySelectorAll(".player");
+document.querySelectorAll(
+"#popupLineupLayer .player, #bench .player"
+)
 
 players.forEach(p => {
 
@@ -1150,9 +1230,13 @@ document.getElementById(
 
 /* ALWAYS rebuild players */
 document.body.style.overflow = "hidden";
-createPlayers();
-
-/* THEN load saved positions */
+if (
+    document.querySelectorAll(
+        "#popupLineupLayer .player, #bench .player"
+    ).length === 0
+) {
+    createPlayers();
+}
 
 loadPlayerPositions();
 
