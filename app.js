@@ -913,7 +913,6 @@ a.click();
 
 }
 
-function registerServiceWorker() {
 
 function registerServiceWorker() {
 
