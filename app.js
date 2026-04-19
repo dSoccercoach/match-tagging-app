@@ -1,4 +1,16 @@
-alert("APP JS LOADED");
+debug("APP JS LOADED");
+window.onerror = function(message, source, lineno, colno, error) {
+
+    let box = document.getElementById("debugBox");
+
+    if (box) {
+        box.innerHTML += "<br><b>ERROR:</b> " + message;
+        box.innerHTML += "<br>Line: " + lineno;
+    }
+
+    return false;
+
+};
 let selectedPlayer = null;
 let selectedEvent = null;
 
