@@ -56,34 +56,35 @@ const jersey = [
 
 function init() {
 
-    alert("INIT START");
+    debug("INIT START");
 
     try {
 
         loadData();
-        alert("loadData OK");
+        debug("loadData OK");
 
         // TEMP — disable service worker
         registerServiceWorker();
+        debug("registerWK OK");
 
         createPlayers();
-        alert("createPlayers OK");
+        debug("createPlayers OK");
 
         createTagPlayers();
-        alert("createTagPlayers OK");
+        debug("createTagPlayers OK");
 
         loadPlayerPositions();
-        alert("loadPlayerPositions OK");
+        debug("loadPlayerPositions OK");
 
     }
 
     catch (err) {
 
-        alert(
+        debug(
             "INIT ERROR: " + err.message
         );
 
-        console.error(err);
+        debug(err);
 
     }
 
@@ -94,7 +95,17 @@ document.addEventListener(
     init
 );
 
+function debug(msg) {
 
+let box = document.getElementById("debugBox");
+
+if (!box) return;
+
+box.innerHTML += "<br>" + msg;
+
+box.scrollTop = box.scrollHeight;
+
+}
 
 function setOpponent() {
 
