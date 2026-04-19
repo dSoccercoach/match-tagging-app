@@ -1,58 +1,49 @@
-const CACHE_NAME = "tracker-v3";
+const CACHE_NAME = "tracker-v4";
 
 const FILES_TO_CACHE = [
-
-"/",
-"/index.html",
-"/style.css",
-"/app.js",
-"/field_vertical_area.png",
-"/field_vertical.png",
-
+"./",
+"./index.html",
+"./style.css",
+"./app.js",
+"./field_vertical_area.png",
+"./field_vertical.png"
 ];
 
-self.addEventListener("install", e => {
+self.addEventListener("install", event => {
 
-console.log("Service Worker installing");
+console.log("SW installing");
 
 self.skipWaiting();
 
-e.waitUntil(
+event.waitUntil(
 
-caches.open(CACHE_NAME).then(cache =>
-
-cache.addAll(FILES_TO_CACHE)
-
-)
+caches.open(CACHE_NAME)
+.then(cache => {
+console.log("Caching files");
+return cache.addAll(FILES_TO_CACHE);
+})
+.catch(err => {
+console.error("Cache failed:", err);
+})
 
 );
 
 });
 
-self.addEventListener("activate", e => {
+self.addEventListener("activate", event => {
 
-console.log("Service Worker activating");
+console.log("SW activating");
 
-e.waitUntil(
+event.waitUntil(
 
 caches.keys().then(keys =>
-
 Promise.all(
-
 keys.map(key => {
-
 if (key !== CACHE_NAME) {
-
-console.log("Deleting old cache:", key);
-
 return caches.delete(key);
-
 }
-
 })
-
 )
-
 )
 
 );
@@ -61,15 +52,12 @@ self.clients.claim();
 
 });
 
-self.addEventListener("fetch", e => {
+self.addEventListener("fetch", event => {
 
-e.respondWith(
+event.respondWith(
 
-caches.match(e.request).then(response =>
-
-response || fetch(e.request)
-
-)
+caches.match(event.request)
+.then(response => response || fetch(event.request))
 
 );
 
