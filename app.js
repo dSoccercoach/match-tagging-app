@@ -1,3 +1,4 @@
+alert("APP JS LOADED");
 let selectedPlayer = null;
 let selectedEvent = null;
 
