@@ -55,16 +55,44 @@ const jersey = [
 
 function init() {
 
-    loadData();
+    alert("INIT START");
 
-    registerServiceWorker();
+    try {
 
-    createPlayers();
-    createTagPlayers();
-    loadPlayerPositions();
+        loadData();
+        alert("loadData OK");
+
+        // TEMP — disable service worker
+        // registerServiceWorker();
+
+        createPlayers();
+        alert("createPlayers OK");
+
+        createTagPlayers();
+        alert("createTagPlayers OK");
+
+        loadPlayerPositions();
+        alert("loadPlayerPositions OK");
+
+    }
+
+    catch (err) {
+
+        alert(
+            "INIT ERROR: " + err.message
+        );
+
+        console.error(err);
+
+    }
 
 }
-document.addEventListener("DOMContentLoaded", init);
+
+document.addEventListener(
+    "DOMContentLoaded",
+    init
+);
+
 
 
 function setOpponent() {
