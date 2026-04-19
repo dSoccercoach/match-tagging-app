@@ -915,19 +915,24 @@ a.click();
 
 function registerServiceWorker() {
 
+function registerServiceWorker() {
+
 if ("serviceWorker" in navigator) {
 
-navigator.serviceWorker
-.register("service-worker.js")
-.then(reg => {
+    navigator.serviceWorker
+    .register("./service-worker.js")
+    .then(reg => {
 
-console.log("SW registered");
+    console.log("SW registered");
 
-reg.update();
+    })
+    .catch(err => {
 
-});
+    console.log("SW failed:", err);
 
-}
+    });
+
+    }
 
 }
 
