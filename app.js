@@ -76,7 +76,7 @@ function init() {
         debug("loadData OK");
 
         // TEMP — disable service worker
-        registerServiceWorker();
+        //registerServiceWorker();
         debug("registerWK OK");
 
         createPlayers();
