@@ -324,6 +324,78 @@ function clearData() {
     }
 }
 
+function copyCSV() {
+
+    if (csvRows.length === 0) {
+
+        alert("No data yet")
+
+        return
+    }
+
+    let header = [
+
+        "date",
+        "player",
+        "energy",
+        "intensity",
+        "technical",
+        "tactical",
+        "understanding",
+        "fun",
+        "performance",
+        "coachRating"
+    ]
+
+    let csvContent = header.join(",") + "\n"
+
+    csvRows.forEach(row => {
+
+        csvContent += [
+
+            row.date,
+            row.player,
+            row.energy,
+            row.intensity,
+            row.technical,
+            row.tactical,
+            row.understanding,
+            row.fun,
+            row.performance,
+            row.coachRating
+
+        ].join(",") + "\n"
+    })
+
+    // Create hidden textarea
+    let textarea =
+        document.createElement("textarea")
+
+    textarea.value = csvContent
+
+    document.body.appendChild(textarea)
+
+    textarea.select()
+
+    textarea.setSelectionRange(
+        0,
+        999999
+    )
+
+    try {
+
+        document.execCommand("copy")
+
+        alert("CSV copied to clipboard")
+
+    } catch (err) {
+
+        alert("Copy failed")
+    }
+
+    document.body.removeChild(textarea)
+}
+
 function openCoachRatingPopup() {
 
     // Remove existing popup if already open
