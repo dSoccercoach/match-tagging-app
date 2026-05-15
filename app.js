@@ -1,1292 +1,449 @@
-let selectedPlayer = null;
-let selectedEvent = null;
+let selectedPlayer = null
 
-let period = 1;
-let seconds = 0;
-let timerInterval;
+let csvRows = []
 
-let matchName = "";
+// Load saved data when the app starts
+function loadData() {
 
-let events = [];
-let substitutions = [];
+    let saved = localStorage.getItem("playerFeedbackData")
 
-let playerPositions = {};
-let tacticalPositions = {};
-let playerStatus = {};
-
-let subMode = false;
-let subOut = null;
-let lastSub = null;
-
-const positions = [
-"GK",
-"RB",
-"RCB",
-"LCB",
-"LB",
-"CM",
-"AM",
-"RW",
-"ST",
-"LW",
-"SUB"
-];
-
-const jersey = [
-6,
-5,
-8,
-4,
-1,
-11,
-12,
-2,
-10,
-14,
-19,
-9,
-78,
-17,
-16,
-7,
-13,
-18
-];
-
-function init() {
-
-    console.log("INIT START");
-
-    try {
-
-        loadData();
-        console.log("loadData OK");
-
-        // TEMP — disable service worker
-        registerServiceWorker();
-        console.log("registerWK OK");
-
-        createPlayers();
-        console.log("createPlayers OK");
-
-        createTagPlayers();
-        console.log("createTagPlayers OK");
-
-        loadPlayerPositions();
-        console.log("loadPlayerPositions OK");
-
+    if (saved) {
+        csvRows = JSON.parse(saved)
+        console.log("Loaded", csvRows.length, "rows from storage")
     }
-
-    catch (err) {
-
-        console.log(
-            "INIT ERROR: " + err.message
-        );
-
-        console.error(err);
-
-    }
-
 }
 
-document.addEventListener(
-    "DOMContentLoaded",
-    init
-);
+// Save data persistently
+function saveData() {
 
-function setOpponent() {
-
-let opponent = prompt("Opponent name:");
-
-let date = new Date()
-.toISOString()
-.split("T")[0];
-
-matchName = date + " vs " + opponent;
-
-document.getElementById("matchName")
-.innerText = matchName;
-saveData();
+    localStorage.setItem(
+        "playerFeedbackData",
+        JSON.stringify(csvRows)
+    )
 }
+
+
+const metrics = [
+        "Energy",
+        "Intensity",
+        "Technical",
+        "Tactical",
+        "Understanding",
+        "Fun",
+        "PlayerPerformance"
+]
+
+const metricLabels = {
+
+    Energy: {
+        left: "Exhausted",
+        right: "Full Energy"
+    },
+
+    Intensity: {
+        left: "Very Low",
+        right: "Very High"
+    },
+
+    Technical: {
+        left: "Very Easy",
+        right: "Very Hard"
+    },
+
+    Tactical: {
+        left: "Very Easy",
+        right: "Very Hard"
+    },
+
+    Understanding: {
+        left: "Confused",
+        right: "Very Clear"
+    },
+
+    Fun: {
+        left: "Not Fun",
+        right: "Very Fun"
+    },
+
+    PlayerPerformance: {
+        left: "Poor Performance",
+        right: "Best Performance"
+    }
+}
+
+const players_numbers = [
+1,2,4,5,6,7,8,9,10,11,12,13,14,16,17,18,19,78]
 
 function createPlayers() {
 
-let fieldLayer =
-document.getElementById(
-"popupLineupLayer"
-);
+    let container = document.getElementById("players")
 
-let bench =
-document.getElementById(
-"bench"
-);
+    for (let i = 0; i < players_numbers.length; i++) {
 
-if (!fieldLayer || !bench) {
+        let btn = document.createElement("button")
 
-console.log("Field or bench not found");
+        btn.innerText = players_numbers[i]
 
-return;
+        btn.onclick = () => {
 
-}
+            selectedPlayer = players_numbers[i]
 
-/* CLEAR */
-
-fieldLayer.innerHTML = "";
-bench.innerHTML = "";
-
-/* CREATE 18 PLAYERS */
-
-for (let i = 0; i < 18; i++) {
-
-let player =
-document.createElement("div");
-
-player.className = "player";
-console.log("Player created :", jersey[i] );
-
-player.innerText = jersey[i];
-
-player.dataset.player = jersey[i];
-
-/* CLICK */
-
-player.onclick = () => {
-
-if (subMode) {
-handleSubstitution(parseInt(player.dataset.player) );
-return;
-
-}
-
-selectPlayer(i);
-
-};
-
-/* STARTERS */
-
-if (i < 11) {
-
-player.style.position =
-"absolute";
-
-player.style.left =
-"20px";
-
-player.style.top =
-(20 + i * 30) + "px";
-
-fieldLayer.appendChild(player);
-
-}
-
-/* BENCH */
-
-else {
-
-player.style.position =
-"static";
-
-player.style.left = "";
-player.style.top = "";
-
-bench.appendChild(player);
-
-}
-
-/* DRAG */
-
-makeDraggable(player);
-
-}
-
-/* ensure bench visible */
-
-bench.style.display = "flex";
-bench.style.visibility = "visible";
-}
-
-function makeDraggable(player) {
-
-    let offsetX = 0;
-    let offsetY = 0;
-
-    let startX = 0;
-    let startY = 0;
-
-    let isDragging = false;
-
-    const TAP_THRESHOLD = 8; // pixels
-
-    player.addEventListener("mousedown", startDrag);
-    player.addEventListener("touchstart", startDrag);
-
-    function startDrag(e) {
-        if (subMode) return;
-        e.preventDefault();
-
-        let event =
-            e.touches ? e.touches[0] : e;
-
-        let rect =
-            player.getBoundingClientRect();
-
-        offsetX =
-            event.clientX - rect.left;
-
-        offsetY =
-            event.clientY - rect.top;
-
-        startX = event.clientX;
-        startY = event.clientY;
-
-        isDragging = false;
-
-        document.addEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.addEventListener(
-            "touchmove",
-            drag,
-            { passive: false }
-        );
-
-        document.addEventListener(
-            "mouseup",
-            stopDrag
-        );
-
-        document.addEventListener(
-            "touchend",
-            stopDrag
-        );
-
-    }
-
-    function drag(e) {
-
-        let event =
-            e.touches ? e.touches[0] : e;
-
-        let dx =
-            Math.abs(
-                event.clientX - startX
-            );
-
-        let dy =
-            Math.abs(
-                event.clientY - startY
-            );
-
-        if (
-            dx > TAP_THRESHOLD ||
-            dy > TAP_THRESHOLD
-        ) {
-
-            isDragging = true;
-
+            document.querySelectorAll("#players button").forEach(b =>
+                b.classList.remove("selected")
+            )
+            document.getElementById("current-player").innerText =
+               "Selected Player: " + players_numbers[i];
+            btn.classList.add("selected")
         }
 
-        if (!isDragging) return;
+        container.appendChild(btn)
+    }
+}
 
-        e.preventDefault();
+function createSliders() {
 
-        let container =
-            document.getElementById(
-                "popupLineupContainer"
-            );
+    let container = document.getElementById("sliders")
 
-        let rect =
-            container.getBoundingClientRect();
+    metrics.forEach(metric => {
 
-        let x =
-            event.clientX -
-            rect.left -
-            offsetX;
+        let div = document.createElement("div")
 
-        let y =
-            event.clientY -
-            rect.top -
-            offsetY;
+        div.className = "slider-container"
 
-        player.style.left =
-            x + "px";
+        div.innerHTML = `
 
-        player.style.top =
-            y + "px";
+            <label>
+                ${metric}:
+                <span id="${metric}-value">5</span>
+            </label>
 
+            <input
+                type="range"
+                min="1"
+                max="10"
+                value="5"
+                id="${metric}"
+                oninput="updateValue('${metric}')"
+            >
+
+            <div class="slider-scale">
+
+                <span>
+                    ${metricLabels[metric].left}
+                </span>
+
+                <span>
+                    ${metricLabels[metric].right}
+                </span>
+
+            </div>
+        `
+
+        container.appendChild(div)
+
+    })
+}
+
+function updateValue(metric) {
+
+    let value = document.getElementById(metric).value
+
+    document.getElementById(metric + "-value").innerText = value
+}
+
+function getCurrentDate() {
+
+    let now = new Date()
+
+    return now.toLocaleDateString(
+        "en-CA",
+        {
+            timeZone: Intl.DateTimeFormat()
+                .resolvedOptions()
+                .timeZone
+        }
+    )
+}
+
+function submitData() {
+
+    if (!selectedPlayer) {
+
+        alert("Select player")
+
+        return
     }
 
-    function stopDrag(e) {
+    let row = {
 
-        document.removeEventListener(
-            "mousemove",
-            drag
-        );
+        date: getCurrentDate(),
 
-        document.removeEventListener(
-            "touchmove",
-            drag
-        );
+        player: selectedPlayer,
 
-        document.removeEventListener(
-            "mouseup",
-            stopDrag
-        );
+        energy: document.getElementById("Energy").value,
+        intensity: document.getElementById("Intensity").value,
+        technical: document.getElementById("Technical").value,
+        tactical: document.getElementById("Tactical").value,
+        understanding: document.getElementById("Understanding").value,
+        fun: document.getElementById("Fun").value,
 
-        document.removeEventListener(
-            "touchend",
-            stopDrag
-        );
-
-        if (!isDragging) {
-
-            let id =
-                player.dataset.player;
-
-            if (subMode) {
-
-                handleSubstitution(
-                    parseInt(id)
-                );
-
-            }
-
-            else {
-
-                selectPlayer(
-                    parseInt(id)
-                );
-
-            }
-
-        }
-
-        else {
-
-            savePlayerPositions();
-
-        }
-
+        // New fields
+        playerPerception: document.getElementById("PlayerPerformance").value,
+        coachRating: 5
     }
 
+    csvRows.push(row)
+
+    saveData()
+
+    alert("Saved")
+
+    resetSliders()
 }
 
-function showPositionMenu(player) {
+function resetSliders() {
 
-let position =
-prompt(
-"Select position:\n" +
-positions.join(", ")
-);
+    metrics.forEach(metric => {
 
-if (!position) return;
+        document.getElementById(metric).value = 5
 
-tacticalPositions[player] = position;
-
+        document.getElementById(metric + "-value").innerText = 5
+    })
 }
 
-function selectEvent(event) {
+async function downloadCSV() {
 
-selectedEvent = event;
+    if (csvRows.length === 0) {
 
-/* highlight button */
+        alert("No data yet")
 
-let buttons =
-document.querySelectorAll(
-".event-btn"
-);
+        return
+    }
 
-buttons.forEach(btn => {
+    let header = [
 
-if (btn.innerText === event)
+        "date",
+        "player",
+        "energy",
+        "intensity",
+        "technical",
+        "tactical",
+        "understanding",
+        "fun",
+        "performance",
+        "coachRating"
+    ]
 
-btn.classList.add("active");
+    let csvContent = header.join(",") + "\n"
 
-else
+    csvRows.forEach(row => {
 
-btn.classList.remove("active");
+        csvContent += [
 
-});
+            row.date,
+            row.player,
+            row.energy,
+            row.intensity,
+            row.technical,
+            row.tactical,
+            row.understanding,
+            row.fun,
+            row.performance,
+            row.coachRating
 
+        ].join(",") + "\n"
+    })
+
+    let file = new File(
+
+        [csvContent],
+
+        "player_feedback.csv",
+
+        {
+            type: "text/csv"
+        }
+    )
+
+    // iPhone/iPad native sharing
+    if (navigator.share) {
+
+        try {
+
+            await navigator.share({
+
+                files: [file],
+
+                title: "Player Feedback CSV"
+
+            })
+
+        } catch (err) {
+
+            console.log("Share cancelled")
+        }
+
+    } else {
+
+        // fallback desktop download
+
+        let url =
+            URL.createObjectURL(file)
+
+        let a =
+            document.createElement("a")
+
+        a.href = url
+
+        a.download =
+            "player_feedback.csv"
+
+        a.click()
+    }
 }
 
-function startMatch() {
+function clearData() {
 
-clearInterval(timerInterval);
+    if (csvRows.length === 0) {
 
-timerInterval =
-setInterval(() => {
+        alert("No data to clear")
 
-seconds++;
+        return
+    }
 
-updateTimer();
+    let confirmClear = confirm(
+        "Are you sure you want to delete all data?"
+    )
 
-}, 1000);
+    if (confirmClear) {
 
+        csvRows = []
+        localStorage.removeItem("playerFeedbackData")
+        alert("All data cleared")
+
+    }
 }
 
-function stopMatch() {
+function openCoachRatingPopup() {
 
-clearInterval(timerInterval);
+    // Remove existing popup if already open
+    let existing = document.getElementById("coach-popup")
 
+    if (existing) {
+        existing.remove()
+    }
+
+    // Background overlay
+    let popup = document.createElement("div")
+
+    popup.id = "coach-popup"
+
+    popup.style.position = "fixed"
+    popup.style.top = "0"
+    popup.style.left = "0"
+    popup.style.width = "100%"
+    popup.style.height = "100%"
+    popup.style.backgroundColor = "rgba(0,0,0,0.7)"
+    popup.style.zIndex = "9999"
+    popup.style.overflow = "auto"
+    popup.style.padding = "20px"
+
+    // White content box
+    let content = document.createElement("div")
+
+    content.style.background = "white"
+    content.style.padding = "20px"
+    content.style.borderRadius = "10px"
+    content.style.maxWidth = "600px"
+    content.style.margin = "auto"
+
+    // Title
+    let title = document.createElement("h2")
+
+    title.innerText = "Coach Ratings"
+
+    content.appendChild(title)
+
+    // Unique players who submitted data
+    let players = [...new Set(csvRows.map(r => r.player))]
+
+    players.forEach(player => {
+
+        let container = document.createElement("div")
+
+        container.style.marginBottom = "20px"
+
+        // Label
+        let label = document.createElement("label")
+
+        label.innerText = "Player " + player + ": "
+
+        // Value display
+        let valueSpan = document.createElement("span")
+
+        valueSpan.id = "coach-value-" + player
+
+        valueSpan.innerText = "5"
+
+        // Slider
+        let slider = document.createElement("input")
+
+        slider.type = "range"
+        slider.min = "1"
+        slider.max = "10"
+        slider.value = "5"
+
+        slider.style.width = "100%"
+
+        slider.oninput = () => {
+
+        valueSpan.innerText = slider.value
+
+        // Update all entries for that player
+        csvRows.forEach(row => {
+
+            if (row.player == player) {
+
+                        row.coachRating = slider.value
+                    }
+                })
+
+            saveData()
+        }
+
+        container.appendChild(label)
+        container.appendChild(valueSpan)
+        container.appendChild(document.createElement("br"))
+        container.appendChild(slider)
+
+        content.appendChild(container)
+    })
+
+    // Close button
+    let closeBtn = document.createElement("button")
+
+    closeBtn.innerText = "Close"
+
+    closeBtn.className = "download-btn"
+
+    closeBtn.onclick = () => {
+
+        popup.remove()
+    }
+
+    content.appendChild(closeBtn)
+
+    popup.appendChild(content)
+
+    document.body.appendChild(popup)
 }
 
-function nextHalf() {
-
-period++;
-
-seconds = 0;
-
-updateTimer();
-
-}
-
-function updateTimer() {
-
-let min =
-Math.floor(seconds / 60);
-
-let sec =
-seconds % 60;
-
-let timeText =
-String(min).padStart(2, "0")
-+
-":"
-+
-String(sec).padStart(2, "0");
-
-/* ADD PERIOD DISPLAY */
-
-document.getElementById("timer")
-.innerText =
-timeText + " | P" + period;
-
-}
-
-
-function startSubstitution() {
-
-subMode = true;
-
-subOut = null;
-
-document.getElementById(
-"subStatus"
-).innerText =
-"Select OUT player";
-
-}
-
-function handleSubstitution(player) {
-console.log("CLICK detected on player:", player);
-if (!subMode) return;
-
-let fieldLayer =
-document.getElementById(
-"popupLineupLayer"
-);
-
-let bench =
-document.getElementById(
-"bench"
-);
-
-/* FIRST CLICK — SELECT OUT */
-
-if (subOut === null) {
-console.log("FIRST CLICK — OUT player selected:", player);
-
-subOut = player;
-document.querySelectorAll(".player")
-.forEach(p => {
-let id =
-parseInt(
-p.dataset.player
-);
-
-p.classList.toggle(
-"sub-out",
-id === subOut
-);
-
-});
-
-document.getElementById(
-"subStatus"
-).innerText =
-"Select IN player";
-
-return;
-
-}
-
-/* SECOND CLICK */
-
-let subIn = player;
-/* GET PLAYER ELEMENTS */
-console.log("FIRST CLICK — IN player selected:", player);
-
-/* GET PLAYERS — SAFE LOOKUP */
-
-let outPlayer = null;
-let inPlayer = null;
-
-document.querySelectorAll(".player").forEach(p => {
-
-    let id = parseInt(p.dataset.player);
-
-    if (id === subOut) outPlayer = p;
-
-    if (id === subIn) inPlayer = p;
-
-});
-
-/* SAFETY CHECK */
-
-if (!outPlayer || !inPlayer) {
-
-    console.log(
-        "Player lookup failed",
-        "outPlayer:",
-        outPlayer,
-        "inPlayer:",
-        inPlayer
-    );
-
-    return;
-
-}
-
-/* DEBUG */
-
-console.log(
-"OUT location:",
-outPlayer.parentElement?.id,
-"IN location:",
-inPlayer.parentElement?.id
-);
-
-/* VALIDATE LOCATIONS */
-
-let outLocation =
-outPlayer.parentElement.id;
-
-let inLocation =
-inPlayer.parentElement.id;
-
-if (outLocation === inLocation) {
-
-    alert(
-        "Select a player from the other group"
-    );
-
-    return;
-
-}
-
-/* SAVE POSITION */
-
-let outX =
-outPlayer.style.left || "20px";
-
-let outY =
-outPlayer.style.top || "20px";
-
-lastSub = {
-
-out: subOut,
-in: subIn,
-outX: outX,
-outY: outY
-
-};
-
-/* MOVE OUT PLAYER TO BENCH */
-
-outPlayer.classList.remove(
-"sub-out"
-);
-
-outPlayer.style.position =
-"static";
-
-outPlayer.style.left = "";
-
-outPlayer.style.top = "";
-
-bench.appendChild(
-outPlayer
-);
-
-/* MOVE IN PLAYER TO FIELD */
-
-inPlayer.style.position =
-"absolute";
-
-inPlayer.style.left =
-outX;
-
-inPlayer.style.top =
-outY;
-
-fieldLayer.appendChild(
-inPlayer
-);
-
-/* LOG SUB */
-
-playerStatus[subOut] =
-"OFF";
-
-playerStatus[subIn] =
-"ON";
-
-substitutions.push({
-
-match: matchName,
-
-out: subOut,
-
-in: subIn,
-
-time:
-document.getElementById(
-"timer"
-).innerText,
-
-period: period
-
-});
-
-/* RESET */
-
-document.querySelectorAll(
-".player"
-).forEach(p =>
-p.classList.remove(
-"sub-out"
-)
-);
-
-console.log(
-"Sub completed:",
-subOut,
-"->",
-subIn
-);
-
-subMode = false;
-subOut = null;
-document.getElementById(
-    "subStatus"
-).innerText = "";
-
-savePlayerPositions();
-
-saveData();
-
-}
-
-function undoSubstitution() {
-
-if (!lastSub) {
-alert("Nothing to undo");
-return;
-}
-
-let fieldLayer = document.getElementById("popupLineupLayer");
-let bench = document.getElementById("bench");
-
-let players = document.querySelectorAll(".player");
-
-/* restore OUT player to field */
-players.forEach(p => {
-
-if (parseInt(p.dataset.player) === lastSub.out) {
-
-p.style.position = "absolute";
-p.style.left = lastSub.outX;
-p.style.top = lastSub.outY;
-
-fieldLayer.appendChild(p);
-
-}
-
-/* restore IN player to bench */
-if (parseInt(p.dataset.player) === lastSub.in) {
-
-p.style.position = "static";
-p.style.left = "";
-p.style.top = "";
-
-bench.appendChild(p);
-
-}
-
-});
-
-/* remove last sub from history */
-substitutions.pop();
-
-lastSub = null;
-
-savePlayerPositions();
-
-saveData();
-
-document.getElementById(
-    "subStatus"
-).innerText =
-    "SUB UNDONE";
-
-}
-
-function getZone(x, y, width, height) {
-
-let cols = 7;
-let rows = 8;
-
-let colSize = width / cols;
-let rowSize = height / rows;
-
-let col = Math.floor(x / colSize);
-let row = Math.floor(y / rowSize);
-
-/* convert to letters */
-let rowLetter = ["A", "B", "C","D", "E", "F","G", "H"][row];
-let colNumber = col + 1;
-
-return rowLetter + colNumber;
-
-}
-
-
-function recordZone(e) {
-
-
-if (!selectedPlayer || !selectedEvent) {
-alert("Select player and event");
-return;
-}
-
-let rect =
-document.getElementById(
-"popupLineupContainer"
-).getBoundingClientRect();
-
-let event =
-    e.touches ? e.touches[0] : e;
-
-let x =
-    event.clientX - rect.left;
-
-let y =
-    event.clientY - rect.top;
-
-/* NEW: zone calculation */
-let zone = getZone(x, y, rect.width, rect.height);
-
-events.push({
-
-match: matchName,
-player: selectedPlayer,
-event: selectedEvent,
-zone: zone,
-x: Math.round(x),
-y: Math.round(y),
-time: document.getElementById("timer").innerText,
-period: period,
-position: getPlayerPosition(selectedPlayer)
-
-});
-
-saveData();
-
-console.log("Event recorded in zone:", zone);
-
-}
-
-function saveData() {
-
-localStorage.setItem(
-"events",
-JSON.stringify(events)
-);
-
-localStorage.setItem(
-"subs",
-JSON.stringify(substitutions)
-);
-
-localStorage.setItem(
-"positions",
-JSON.stringify(tacticalPositions)
-);
-localStorage.setItem(
-    "matchName",
-    matchName
-);
-
-}
-
-function loadData() {
-
-let e =
-localStorage.getItem("events");
-
-if (e)
-events = JSON.parse(e);
-
-let s =
-localStorage.getItem("subs");
-
-if (s)
-substitutions = JSON.parse(s);
-
-let p =
-localStorage.getItem("positions");
-
-if (p)
-tacticalPositions = JSON.parse(p);
-
-let m =
-    localStorage.getItem(
-        "matchName"
-    );
-
-if (m) {
-
-    matchName = m;
-
-    document.getElementById(
-        "matchName"
-    ).innerText =
-        matchName;
-
-}
-
-}
-
-function exportCSV() {
-
-let csv =
-"match,time,period,type,player,position,zone,x,y\n"
-
-events.forEach(e => {
-
-csv += `${e.match},${e.time},${e.period},${e.event},${e.player},${e.position},${e.zone},${e.x},${e.y}\n`;
-});
-
-substitutions.forEach(s => {
-
-csv +=
-`${s.match},${s.time},${s.period},SUB_OUT,${s.out},,,\n`;
-
-csv +=
-`${s.match},${s.time},${s.period},SUB_IN,${s.in},,,\n`;
-
-});
-
-let blob =
-new Blob(
-[csv],
-{ type: "text/csv" }
-);
-
-let url =
-URL.createObjectURL(blob);
-
-let a =
-document.createElement("a");
-
-a.href = url;
-
-a.download =
-matchName + ".csv";
-
-a.click();
-
-}
-
-
-function registerServiceWorker() {
-
+loadData()
+createPlayers()
+createSliders()
 if ("serviceWorker" in navigator) {
 
     navigator.serviceWorker
-    .register("./service-worker.js")
-    .then(reg => {
-
-    console.log("SW registered");
-
-    })
-    .catch(err => {
-
-    console.log("SW failed:", err);
-
-    });
-
-    }
-
-}
-
-
-function savePlayerPositions() {
-
-   let players =
-document.querySelectorAll(
-    "#popupLineupLayer .player, #bench .player"
-);
-
-    let positions = {};
-
-    players.forEach(p => {
-
-        let parent =
-            p.parentElement.id;
-
-        positions[
-            p.dataset.player
-        ] = {
-
-            x: p.style.left,
-            y: p.style.top,
-
-            location: parent
-            // popupLineupLayer OR bench
-
-        };
-
-    });
-    playerPositions = positions;
-
-    localStorage.setItem(
-    "fieldPositions",
-    JSON.stringify(positions)
-    );
-
-}
-function createTagPlayers() {
-
-let panel =
-document.getElementById(
-"tagPlayerPanel"
-);
-
-if (!panel) return;
-
-panel.innerHTML = "";
-
-/* CREATE 18 PLAYERS */
-
-for (let i = 0; i < 18; i++) {
-
-let player =
-document.createElement("div");
-
-player.className = "player";
-
-player.innerText = jersey[i];
-
-player.dataset.player = jersey[i];
-
-/* IMPORTANT */
-player.style.position = "static";
-
-/* CLICK */
-
-player.onclick = () => {
-
-selectedPlayer = jersey[i];
-
-highlightTagPlayer(jersey[i]);
-
-};
-
-panel.appendChild(player);
-
-}
-
-}
-
-function highlightTagPlayer(number) {
-
-let players =
-document.querySelectorAll(
-"#tagPlayerPanel .player"
-);
-
-players.forEach(p => {
-
-if (p.innerText == number) {
-
-p.style.background = "blue";
-
-p.style.transform = "scale(1.2)";
-
-}
-
-else {
-
-p.style.background = "red";
-
-p.style.transform = "scale(1)";
-
-}
-
-});
-
-}
-
-function loadPlayerPositions() {
-
-    let saved =
-        localStorage.getItem(
-            "fieldPositions"
-        );
-
-    if (!saved) return;
-
-    let positions =
-        JSON.parse(saved);
-
-    let fieldLayer =
-        document.getElementById(
-            "popupLineupLayer"
-        );
-
-    let bench =
-        document.getElementById(
-            "bench"
-        );
-
-   let players =
-document.querySelectorAll(
-    "#popupLineupLayer .player, #bench .player"
-);
-
-    players.forEach(p => {
-
-        let id =
-            p.dataset.player;
-
-        if (!positions[id])
-            return;
-
-        let pos =
-            positions[id];
-
-        /* MOVE PLAYER TO SAVED LOCATION */
-
-        if (
-            pos.location === "bench"
-        ) {
-
-            p.style.position =
-                "static";
-
-            bench.appendChild(p);
-
-        }
-
-        else {
-
-            p.style.position =
-                "absolute";
-
-            fieldLayer.appendChild(p);
-
-        }
-
-        /* RESTORE POSITION */
-
-        if (pos.x)
-            p.style.left = pos.x;
-
-        if (pos.y)
-            p.style.top = pos.y;
-
-    });
-
-}
-
-function selectPlayer(number) {
-
-selectedPlayer = number;
-
-highlightSelectedPlayer(number);
-
-}
-function getPlayerPosition(player) {
-
-return tacticalPositions[player] || "";
-
-}
-
-function clearMatchData() {
-
-let confirmClear =
-confirm(
-"Clear all recorded events and substitutions?"
-);
-
-if (!confirmClear)
-return;
-
-/* CLEAR EVENTS */
-
-events = [];
-
-localStorage.removeItem(
-"events"
-);
-
-/* CLEAR SUBSTITUTIONS */
-
-substitutions = [];
-
-localStorage.removeItem(
-"subs"
-);
-
-/* RESET UNDO */
-
-lastSub = null;
-
-/* OPTIONAL: reset player status */
-
-playerStatus = {};
-
-/* SAVE CLEAN STATE */
-
-saveData();
-
-alert(
-"Events and substitutions cleared"
-);
-
-}
-
-function clearLastEvents() {
-
-if (events.length === 0) return;
-
-let confirmClear =
-confirm(
-"Clear last event?"
-);
-
-if (!confirmClear)
-return;
-
-events.pop();
-
-saveData();
-
-alert("Last event removed");
-
-}
-
-function highlightSelectedPlayer(number) {
-
-let players =
-document.querySelectorAll(
-"#popupLineupLayer .player, #bench .player"
-)
-
-players.forEach(p => {
-
-if (p.innerText == number) {
-
-p.style.background = "blue";
-
-p.style.transform = "scale(1.2)";
-
-}
-
-else {
-
-p.style.background = "red";
-
-p.style.transform = "scale(1)";
-
-}
-
-});
-
-}
-
-
-
-
-function toggleLineup() {
-
-let frame =
-document.getElementById("lineupFrame");
-
-if (!frame) {
-
-alert("lineupFrame not found");
-
-return;
-
-}
-
-if (
-frame.style.display === "none" ||
-frame.style.display === ""
-) {
-
-frame.style.display = "block";
-
-loadPlayerPositions();
-
-console.log("Line-up shown");
-
-}
-
-else {
-
-frame.style.display = "none";
-
-console.log("Line-up hidden");
-
-}
-
-}
-
-function openLineup() {
-
-document.getElementById(
-"lineupModal"
-).style.display = "block";
-
-/* ALWAYS rebuild players */
-document.body.style.overflow = "hidden";
-if (
-    document.querySelectorAll(
-        "#popupLineupLayer .player, #bench .player"
-    ).length === 0
-) {
-    createPlayers();
-}
-
-loadPlayerPositions();
-
-}
-
-function closeLineup() {
-
-    document.body.style.overflow =
-        "auto";
-
-    savePlayerPositions();
-
-    document.getElementById(
-        "lineupModal"
-    ).style.display = "none";
-
+        .register("./service-worker.js")
+        .then(() => console.log("Service Worker Registered"))
 }
